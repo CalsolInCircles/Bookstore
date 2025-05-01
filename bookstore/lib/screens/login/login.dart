@@ -18,7 +18,24 @@ class _LoginPageState extends State<LoginPage> {
         password: _passwordController.text.trim(),
       );
     } catch (e) {
-      print("Log In Error: $e");
+      showDialog(
+        context: context,
+        builder:
+            (_) => AlertDialog(
+              title: Text("Sign In Failed"),
+              content: Text(
+                "An error occurred during sign in. Please try again later. \nError: $e",
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("OK"),
+                ),
+              ],
+            ),
+      );
     }
   }
 
@@ -36,7 +53,24 @@ class _LoginPageState extends State<LoginPage> {
         "createdAt": Timestamp.now(),
       });
     } catch (e) {
-      print("Log Up Error: $e");
+      showDialog(
+        context: context,
+        builder:
+            (_) => AlertDialog(
+              title: Text("Sign Up Failed"),
+              content: Text(
+                "An error occurred during sign up. Please try again later. \nError: $e",
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("OK"),
+                ),
+              ],
+            ),
+      );
     }
   }
 

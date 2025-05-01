@@ -15,6 +15,9 @@ More features to be added.
 - 🖼️ View book covers in a clean, simple interface
 - 📁 Persistent library per user
 
+[![Watch the demo video on YouTube](https://img.youtube.com/vi/8m2A1aiLCCI/0.jpg)](https://youtube.com/shorts/8m2A1aiLCCI)
+
+
 ---
 
 ## 🛠️ Technologies

@@ -1,3 +1,4 @@
+import 'package:bookstore/screens/home/book_details_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +21,14 @@ void showBookOptions(
               ListTile(
                 leading: const Icon(Icons.info_outline),
                 title: const Text("View Details"),
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => BookDetailsScreen(bookId: docId),
+                    ),
+                  );
+                },
               ),
               ListTile(
                 leading: const Icon(Icons.delete_outline),

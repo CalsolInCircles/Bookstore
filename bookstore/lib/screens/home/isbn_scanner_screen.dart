@@ -1,4 +1,3 @@
-// barcode_scanner_page.dart
 import 'package:bookstore/services/book_information_api.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -8,16 +7,20 @@ import 'package:camera/camera.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 
 class BarcodeScannerPage extends StatefulWidget {
+  const BarcodeScannerPage({super.key});
+
   @override
-  _BarcodeScannerPageState createState() => _BarcodeScannerPageState();
+  BarcodeScannerPageState createState() => BarcodeScannerPageState();
 }
 
-class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
+class BarcodeScannerPageState extends State<BarcodeScannerPage> {
   late CameraController _controller;
   late BarcodeScanner _barcodeScanner;
   bool _isDetecting = false;
   bool _isCameraInitialized = false;
   bool _showCamera = true;
+  String? _lastScannedBarcode;
+  DateTime _lastScanTime = DateTime.now().subtract(const Duration(seconds: 3));
 
   @override
   void initState() {
@@ -52,7 +55,6 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
     String barcode,
     Map<String, dynamic> bookData,
   ) async {
-    print(bookData);
     showDialog(
       context: context,
       builder:
@@ -68,7 +70,7 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
                     fit: BoxFit.contain,
                   ),
                 const SizedBox(height: 10),
-                Text("Author: ${bookData["authors"] ?? "Unknown"}"),
+                Text("Author: ${bookData["authors"]?.join(', ') ?? "Unknown"}"),
               ],
             ),
             actions: [
@@ -97,6 +99,7 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
                           "title": bookData["title"] ?? "",
                           "authors": bookData["authors"],
                           "cover": bookData["imageLinks"]["thumbnail"],
+                          "genres": bookData["categories"],
                           "scannedAt": Timestamp.now(),
                         });
 
@@ -118,6 +121,12 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
   void _processCameraImage(CameraImage image) async {
     if (_isDetecting) return;
     _isDetecting = true;
+
+    final now = DateTime.now();
+    if (now.difference(_lastScanTime) < const Duration(seconds: 2)) {
+      _isDetecting = false;
+      return;
+    }
 
     final WriteBuffer allBytes = WriteBuffer();
     for (final Plane plane in image.planes) {
@@ -141,7 +150,10 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
       if (barcodes.isNotEmpty) {
         final barcode = barcodes.first.displayValue;
 
-        if (barcode != null && mounted) {
+        if (barcode != null && barcode != _lastScannedBarcode && mounted) {
+          _lastScannedBarcode = barcode;
+          _lastScanTime = now;
+
           await _controller.stopImageStream();
           setState(() => _showCamera = false);
 
@@ -152,23 +164,21 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
           } else {
             _resetScanner();
           }
-        } else {
-          _resetScanner();
         }
-      } else {
-        _isDetecting = false;
       }
     } catch (e) {
       if (mounted) {
-        SnackBar(
-          content: Text("Error scanning or adding book. Please try again."),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 3),
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Error scanning or adding book. Please try again."),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
         );
       }
+    } finally {
+      _isDetecting = false;
     }
-
-    _isDetecting = false;
   }
 
   @override
